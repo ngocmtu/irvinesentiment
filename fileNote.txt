@@ -1,0 +1,19 @@
+dict.csv: 2014 test file with twit and associated sentiment
+getstockname.py: get stock names from any file, as along as stock names are indicated by syntax '$name'
+ircount.py: take in ST file, takes twit, sentiment, and date | output - twit, the number of mentions of stock each day
+irvine.py: in - ST file, | out1: stock name and mentioned date | out2: twits with delisted stock symbols
+irvine14.py: in - ST file, | out1: stock name, mentioned date, and sentiment | out2: stock name, delisted stock, and date; different is irvine14.py also extracts sentiment for non-delisted stocks and includes date for delisted stock
+irvine14v2.py: in - ST file, | out - delisted symbols, twit, and date
+nanv2: output of irvine14v2.py
+nanv3: output of irvine14v2.py, input is a much larger file than v2
+placeholder.csv: hold csv middleman
+randv3.csv: stock, date, sentiment
+sample09.csv: 50 rows from 2009 file
+sample50k.csv: 50,000 rows from 2014 file
+sample50k.csv: 50,000 rows from 2014 file
+sample5k.csv: 5,000 rows from 2014 file
+samplenext50k.csv: different 50,000 rows from 2014 file
+sen.py: 
+sentest4.csv: correctness of sen.py ran on some random test set
+sentiment14.csv: stock, date, and sentiment of 2014 file, has 56196 rows
+stw14prod.csv: training file, has twits and associated sentiment
