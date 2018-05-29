@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-#TODO:
-# separate training file data into training and testing sets
+# Bag-of-words model
+# extract all words from given dataset
+# extract features and calculate the score of given twit based on individual scores
 
 import pandas as pd 
 import sys
@@ -11,27 +12,43 @@ import random
 import nltk
 from nltk.corpus import stopwords
 import string
+from itertools import islice
+
+def take(n,iterable):
+	return list(islice(iterable,n))
 
 bullfile = sys.argv[1]
 bearfile = sys.argv[2]
-reload(sys)
-sys.setdefaultencoding('utf-8')
+# reload(sys)
+# sys.setdefaultencoding('utf-8')
 
 stop_words=set(stopwords.words('english'))
 
-def cleanTwit(twit):
-	filtered_words = []
+# get rid of all punctuation
+# the get rid of words less than 3, stopwords and number
+# after initial screening is done (i.e: only words that do not start with $)
+def clean_word(word):
 	for ch in string.punctuation:
-		if ch in twit:
-			twit = twit.replace(ch,' ')
-	wordList = twit.split()
-	wordList = [w for w in wordList if w[0] != '$']
-	filteredWordList = [w for w in wordList if not w in stop_words]
-	for i in range(len(filteredWordList)):
-		e = filteredWordList[i].lower()
-		if len(e) >= 3:
-			filtered_words.append(e)
-	return filtered_words
+		if ch in word:
+			word = word.replace(ch,'')
+	if len(word) >= 3 and not word in stop_words and not word.isdigit():
+		return word.lower()
+	else:
+		return None
+
+# split the full twit into a list of words
+# clean the list to these criteria
+# # no '$' or 'http' in the beginning
+# then push these words  
+def cleanTwit(twit):
+	i = 0
+	wordListRaw = twit.split()
+	wordList = []
+	for each in wordListRaw:
+		if each[0] != '$' and each[0:4] != 'http':
+			word = clean_word(each)
+			wordList.append(word) if not word is None else None
+	return wordList
 
 bulltwits = []
 beartwits = []
@@ -48,7 +65,7 @@ beartwits = [(cleanTwit(x.strip()),'Bearish') for x in beartwits]
 # bullbear: dict of twits and sentiment
 bullbear = bulltwits + beartwits
 random.shuffle(bullbear)
-bullbeartrain = bullbear[:int(len(bullbear)*0.3)]
+bullbeartrain = bullbear[:int(len(bullbear)*0.5)]
 bullbeartest = bullbear[int(len(bullbear)*0.3):]
 
 def get_words_in_tweets(tweets):
@@ -59,12 +76,11 @@ def get_words_in_tweets(tweets):
 
 def get_word_features(wordlist):
     wordlist = nltk.FreqDist(wordlist)
-    word_features = wordlist.keys()
+    word_features = dict((key,value) for key,value in wordlist.iteritems() if value>0)
+    word_features = word_features.keys()
     return word_features
 
 word_features = get_word_features(get_words_in_tweets(bullbeartrain))
-print('Word features: ')
-print(word_features[0:21])
 
 def extract_features(document):
     document_words = set(document)
@@ -73,16 +89,30 @@ def extract_features(document):
         features['contains(%s)' % word] = (word in document_words)
     return features
 
+# apply_features
+# 1st param: name of function to be applied to each token; should return a feature set
+# ie: a dict mapping feature names to feature values
+# 2nd param: list of tokens to which function should be applied
 training_set = nltk.classify.apply_features(extract_features, bullbeartrain)
+print(type(training_set))
+print("Length of training_set "+str(len(training_set)))
+
+# apply classifier so that only features with a weight > 1.5 gets counted
 classifier = nltk.NaiveBayesClassifier.train(training_set)
-print(classifier.show_most_informative_features(10))
+feature_set = classifier.most_informative_features(10)
+print('Feature set type '+str(type(feature_set)))
+for word,feature in feature_set:
+	print(word)
+	print(feature)
+
+# print(classifier.show_most_informative_features(10))
 
 # let model label data in test file
 # then cross-check labels with actual test
 # fr = pd.read_csv(ofile)
-test_set = nltk.classify.apply_features(extract_features, bullbeartest)
-print('Accuracy test')
-print(nltk.classify.accuracy(classifier,test_set))
+# test_set = nltk.classify.apply_features(extract_features, bullbeartest)
+#print(test_set[0])
+#print(nltk.classify.accuracy(classifier,test_set))
 
 # testtwits = list(bullbeartest.keys())
 # correct = 0
