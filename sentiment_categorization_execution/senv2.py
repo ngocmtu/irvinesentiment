@@ -4,8 +4,6 @@
 # extract all words from given dataset
 # extract features and calculate the score of given twit based on individual scores
 
-import pandas as pd 
-import numpy as np
 import sys
 import csv
 import math
@@ -50,14 +48,18 @@ def cleanTwit(twit):
 # get the tweet column from the csv file
 bulltwits = []
 beartwits = []
-bull_df = pd.read_csv(bullfile)
-bear_df = pd.read_csv(bearfile)
+with open(bullfile,'r') as bu_f,open(bearfile,'r') as be_f:
+	bull_reader = csv.reader(bu_f)
+	bear_reader = csv.reader(be_f)
+	for row in bull_reader:
+		bulltwits.append(row[1])
+	for row in bear_reader:
+		beartwits.append(row[1])
 
 # there's a lot more bull than bear tweets 
 # so limit bull data to only equal bear
-total_bear_tweets = len(bear_df['tweet'])
-bulltwits = list(bull_df['tweet'])
-beartwits = list(bear_df['tweet'])[:total_bear_tweets]
+total_bear_tweets = len(beartwits)
+bulltwits = bulltwits[:total_bear_tweets]
 
 # bullbearlist: simple list with twits with no sentiment
 bullbearlist = [cleanTwit(x.strip()) for x in bulltwits] + [cleanTwit(x.strip()) for x in beartwits]
@@ -103,8 +105,9 @@ def extract_features(document):
 # ie: a dict mapping feature names to feature values
 # 2nd param: list of tokens to which function should be applied
 training_set = nltk.classify.apply_features(extract_features, bullbeartrain)
+test_set = nltk.classify.apply_features(extract_features,bullbeartest)
 
 # apply classifier so that only features with a weight > 1.5 gets counted
 classifier = nltk.NaiveBayesClassifier.train(training_set)
 
-print('accuracy:'+nltk.classify.accuracy(classifier,test_set))
+print('accuracy:'+str(nltk.classify.accuracy(classifier,test_set)))
