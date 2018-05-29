@@ -5,6 +5,7 @@
 # extract features and calculate the score of given twit based on individual scores
 
 import pandas as pd 
+import numpy as np
 import sys
 import csv
 import math
@@ -12,15 +13,11 @@ import random
 import nltk
 from nltk.corpus import stopwords
 import string
-from itertools import islice
-
-def take(n,iterable):
-	return list(islice(iterable,n))
 
 bullfile = sys.argv[1]
 bearfile = sys.argv[2]
-# reload(sys)
-# sys.setdefaultencoding('utf-8')
+reload(sys)
+sys.setdefaultencoding('utf-8')
 
 stop_words=set(stopwords.words('english'))
 
@@ -50,12 +47,17 @@ def cleanTwit(twit):
 			wordList.append(word) if not word is None else None
 	return wordList
 
+# get the tweet column from the csv file
 bulltwits = []
 beartwits = []
-with open(bullfile) as f:
-	bulltwits = f.readlines()
-with open(bearfile) as f:
-	beartwits = f.readlines()
+bull_df = pd.read_csv(bullfile)
+bear_df = pd.read_csv(bearfile)
+
+# there's a lot more bull than bear tweets 
+# so limit bull data to only equal bear
+total_bear_tweets = len(bear_df['tweet'])
+bulltwits = list(bull_df['tweet'])
+beartwits = list(bear_df['tweet'])[:total_bear_tweets]
 
 # bullbearlist: simple list with twits with no sentiment
 bullbearlist = [cleanTwit(x.strip()) for x in bulltwits] + [cleanTwit(x.strip()) for x in beartwits]
@@ -65,8 +67,15 @@ beartwits = [(cleanTwit(x.strip()),'Bearish') for x in beartwits]
 # bullbear: dict of twits and sentiment
 bullbear = bulltwits + beartwits
 random.shuffle(bullbear)
-bullbeartrain = bullbear[:int(len(bullbear)*0.5)]
-bullbeartest = bullbear[int(len(bullbear)*0.3):]
+
+# use k-fold to calculate average accuracy of model
+# for i in np.arange(0.0,1.0,0.1):
+# 	total_bullbear = len(bullbear)
+# 	bullbeartrain = bullbear[0:int(i*total_bullbear)]+bullbear[int((i+0.1)*total_bullbear)]
+# 	bullbeartest = bullbear[int(i*total_bullbear):int((i+0.1)*total_bullbear)]
+
+bullbeartrain = bullbear[:int(len(bullbear)*0.8)]
+bullbeartest = bullbear[int(len(bullbear)*0.2):]
 
 def get_words_in_tweets(tweets):
     all_words = []
@@ -94,38 +103,8 @@ def extract_features(document):
 # ie: a dict mapping feature names to feature values
 # 2nd param: list of tokens to which function should be applied
 training_set = nltk.classify.apply_features(extract_features, bullbeartrain)
-print(type(training_set))
-print("Length of training_set "+str(len(training_set)))
 
 # apply classifier so that only features with a weight > 1.5 gets counted
 classifier = nltk.NaiveBayesClassifier.train(training_set)
-feature_set = classifier.most_informative_features(10)
-print('Feature set type '+str(type(feature_set)))
-for word,feature in feature_set:
-	print(word)
-	print(feature)
 
-# print(classifier.show_most_informative_features(10))
-
-# let model label data in test file
-# then cross-check labels with actual test
-# fr = pd.read_csv(ofile)
-# test_set = nltk.classify.apply_features(extract_features, bullbeartest)
-#print(test_set[0])
-#print(nltk.classify.accuracy(classifier,test_set))
-
-# testtwits = list(bullbeartest.keys())
-# correct = 0
-# wrong = 0
-# for i in range(len(testtwits)):
-# 	senTest = classifier.classify(extract_features(tweet.split()))
-# 	if sen == senTest:
-# 		correct += 1
-# 		csvwriter.writerow([tweet,sen,senTest,'Correct'])
-# 	else:
-# 		wrong += 1
-# 		csvwriter.writerow([tweet,sen,senTest,'Wrong'])
-# print('Correct ' + str(correct))
-# print('Wrong ' + str(wrong))
-# percentageCorrect = 'Correct ratio '+str(100*correct/(correct+wrong))+'%'
-# print(percentageCorrect)
+print('accuracy:'+nltk.classify.accuracy(classifier,test_set))
