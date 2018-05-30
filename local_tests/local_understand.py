@@ -20,7 +20,8 @@ sys.setdefaultencoding('utf-8')
 def word_feats(words):
     return dict([(word, True) for word in words])
 
-def best_bigram_word_feats(words,score_fn=BigramAssocMeasures.chi_sq,n=1000):
+bigram_measure = BigramAssocMeasures()
+def best_bigram_word_feats(words,score_fn=bigram_measure.pmi,n=1000):
 	bigram_finder = BigramCollocationFinder.from_words(words)
 	bigram_finder.apply_word_filter(lambda w: not w.isalpha())
 	bigram_finder.apply_word_filter(lambda w: w in stop_words)
