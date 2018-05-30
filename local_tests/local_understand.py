@@ -13,6 +13,7 @@ from nltk.corpus import stopwords
 from os import path, listdir
 
 stop_words=set(stopwords.words('english'))
+nltk.download('punkt')
 reload(sys)
 sys.setdefaultencoding('utf-8')
  
