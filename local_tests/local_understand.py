@@ -75,13 +75,22 @@ for line in beartwits:
 bull_feats = [(best_bigram_word_feats(bull_word),'bull') for bull_word in bull_words]
 bear_feats = [(best_bigram_word_feats(bear_word),'bear') for bear_word in bear_words]
 
-bull_cutoff = int(len(bull_feats)*0.9)
-bear_cutoff = int(len(bear_feats)*0.9)
+accuracy_from_tests = []
+for i in range(10):
+	i = 0.1*i
+	bull_cutoff = int(len(bull_feats)*i)
+	bear_cutoff = int(len(bear_feats)*i)
+	bull_cutoff_up = int(len(bull_feats)*(i+0.1))
+	bear_cutoff_up = int(len(bear_feats)*(i+0.1))
 
-trainfeats = bull_feats[:bull_cutoff] + bear_feats[:bear_cutoff]
-testfeats = bull_feats[bull_cutoff:] + bear_feats[bear_cutoff:]
 
-classifier = NaiveBayesClassifier.train(trainfeats)
-classifier.show_most_informative_features(100)
+	trainfeats = bull_feats[0:bull_cutoff] + bull_feats[bull_cutoff_up:len(bull_feats)] + bear_feats[0:bear_cutoff] + bear_feats[bear_cutoff_up:len(bear_feats)]
+	testfeats = bull_feats[bull_cutoff:bull_cutoff_up] + bear_feats[bear_cutoff:bear_cutoff_up]
 
-print 'accuracy:', nltk.classify.util.accuracy(classifier, testfeats)
+	classifier = NaiveBayesClassifier.train(trainfeats)
+	classifier.show_most_informative_features(20)
+
+	accuracy_from_tests.append(nltk.classify.util.accuracy(classifier, testfeats))
+	print('Test number %i accuracy: %f' % (i*10+1, nltk.classify.util.accuracy(classifier, testfeats)))
+
+print('The average accuracy of 10 tests is '+str(sum(accuracy_from_tests)/len(accuracy_from_tests)))
