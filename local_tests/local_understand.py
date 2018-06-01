@@ -90,7 +90,10 @@ for i in range(10):
 	classifier = NaiveBayesClassifier.train(trainfeats)
 	classifier.show_most_informative_features(20)
 
-	accuracy_from_tests.append(nltk.classify.util.accuracy(classifier, testfeats))
-	print('Test number %i accuracy: %f' % (i*10+1, nltk.classify.util.accuracy(classifier, testfeats)))
+	test_accuracy = nltk.classify.util.accuracy(classifier, testfeats)
+	accuracy_from_tests.append(test_accuracy)
+	print('Trained on '+str(len(trainfeats))+' rows')
+	print('Tested on '+str(len(testfeats))+' rows')
+	print('Test number %i accuracy: %f' % (i*10+1, test_accuracy))
 
 print('The average accuracy of 10 tests is '+str(sum(accuracy_from_tests)/len(accuracy_from_tests)))
