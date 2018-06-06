@@ -59,11 +59,6 @@ for f in files:
 bull_words = []
 bear_words = []
 
-# because there's more bearish news
-# limit the length of bullish list to its bearish list
-total_bear_tweets = len(beartwits)
-bulltwits = bulltwits[:total_bear_tweets]
-
 for line in bulltwits:
 	line = unicode(line,errors='ignore')
 	bull_words.append(word_tokenize(line.lower()))
