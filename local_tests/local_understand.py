@@ -28,7 +28,7 @@ def best_bigram_word_feats(words,score_fn=bigram_measure.pmi,n=2000):
 	bigram_finder.apply_word_filter(lambda w: w in stop_words)
 	bigram_finder.apply_word_filter(lambda w: len(w)<2)
 	bigram_finder.apply_word_filter(lambda w: w in stock_tickers)
-	bigram_finder.apply_word_filter(lambda w: == 'http')
+	bigram_finder.apply_word_filter(lambda w: w == 'http')
 
 	bigrams = bigram_finder.nbest(score_fn,n)
 	d = dict([(bigram, True) for bigram in bigrams])
