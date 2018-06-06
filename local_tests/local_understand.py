@@ -13,24 +13,28 @@ from nltk.corpus import stopwords
 from os import path, listdir
 
 stop_words=set(stopwords.words('english'))
-nltk.download('punkt')
 reload(sys)
 sys.setdefaultencoding('utf-8')
+stock_tickers = [line.rstrip('\n\r') for line in open('tick2015.csv')]
+stock_tickers = [tick.lower() for tick in stock_tickers]
+bigram_measure = BigramAssocMeasures()
  
 def word_feats(words):
     return dict([(word, True) for word in words])
 
-bigram_measure = BigramAssocMeasures()
-def best_bigram_word_feats(words,score_fn=bigram_measure.pmi,n=1000):
+def best_bigram_word_feats(words,score_fn=bigram_measure.pmi,n=2000):
 	bigram_finder = BigramCollocationFinder.from_words(words)
 	bigram_finder.apply_word_filter(lambda w: not w.isalpha())
 	bigram_finder.apply_word_filter(lambda w: w in stop_words)
 	bigram_finder.apply_word_filter(lambda w: len(w)<2)
+	bigram_finder.apply_word_filter(lambda w: w in stock_tickers)
+	bigram_finder.apply_word_filter(lambda w: == 'http')
 
 	bigrams = bigram_finder.nbest(score_fn,n)
 	d = dict([(bigram, True) for bigram in bigrams])
 
-	single_words = [word.lower() for index,word in enumerate(words) if len(word) > 3 and not word.isdigit() and not word in stop_words and words[index-1]!='$' and words[index-1]!='@']
+	single_words = [word.lower() for index,word in enumerate(words) if len(word) > 1 and word.isalpha() and not word in stop_words and words[index-1]!='$' and words[index-1]!='@']
+	# 
 	d.update(word_feats(single_words))
 	return d
 
@@ -59,19 +63,28 @@ for f in files:
 bull_words = []
 bear_words = []
 
-# because there's more bearish news
-# limit the length of bullish list to its bearish list
-total_bear_tweets = len(beartwits)
-bulltwits = bulltwits[:total_bear_tweets]
+def filter_stock(words):
+	return_words = []
+	for index,word in enumerate(words):
+		if words[index-1] == '$' and word.isalpha() and not word in stock_tickers:
+			return None
+		else:
+			return_words.append(word)
+	return return_words
+
 
 for line in bulltwits:
 	line = unicode(line,errors='ignore')
-	bull_words.append(word_tokenize(line.lower()))
+	to_append = filter_stock(word_tokenize(line.lower()))
+	bull_words.append(to_append) if to_append is not None else None
+	# bull_words.append(word_tokenize(line.lower()))
 for line in beartwits:
 	line = unicode(line,errors='ignore')
-	bear_words.append(word_tokenize(line.lower()))
+	to_append = filter_stock(word_tokenize(line.lower()))
+	bear_words.append(to_append) if to_append is not None else None
+	# bear_words.append(word_tokenize(line.lower()))
 
-# BigramCollocationFinder.from_words takes param of list of words
+#BigramCollocationFinder.from_words takes param of list of words
 bull_feats = [(best_bigram_word_feats(bull_word),'bull') for bull_word in bull_words]
 bear_feats = [(best_bigram_word_feats(bear_word),'bear') for bear_word in bear_words]
 
@@ -88,7 +101,7 @@ for i in range(10):
 	testfeats = bull_feats[bull_cutoff:bull_cutoff_up] + bear_feats[bear_cutoff:bear_cutoff_up]
 
 	classifier = NaiveBayesClassifier.train(trainfeats)
-	classifier.show_most_informative_features(20)
+	classifier.show_most_informative_features(100)
 
 	test_accuracy = nltk.classify.util.accuracy(classifier, testfeats)
 	accuracy_from_tests.append(test_accuracy)
