@@ -12,7 +12,7 @@ with open('sentiment_counted','wb') as counted:
 	for f in files:
 		bull_count = 0
 		bear_count = 0
-		with open(f,'r') as csvread:
+		with open(path.join(folder,f),'r') as csvread:
 			reader = csv.reader(csvread)
 			for row in reader:
 				if row[1] > 0.5:
