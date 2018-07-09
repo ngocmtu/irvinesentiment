@@ -54,24 +54,11 @@ def filter_stock(words):
 			return_words.append(word)
 	return return_words
 
-# param: 
-# # tweets: list of tweets, each tweet has str type
-# # filename: input file name to name the output file
-# classify input list of tweets, write them to an output file
-
-# TODO: find out how to turn bigrams in regular words and use them as features
-# def classify_nosen(tweets, filename):
-# 	nosen_words = None
-# 	nosentwits_filtered = None
-# 	for tweet in tweets:
-# 		tweet = unicode(tweet,errors='ignore')
-# 		to_append = filter_stock(word_tokenize(tweet.lower()))
-# 		if to_append is not None:
-
-# 		nosen_words.append(to_append) if to_append is not None else None
-# 		nosentwits_filtered.append(line) if to_append is not None else None
-
-# 		nosen_feats = [word_feats(single_word_filter(nosen_word)) for nosen_word in nosen_words]
+# input: tweet ('$AAPL and $FB are rocketing!')
+# output: a list of tickers from the tweet (['$AAPL','$FB'])
+def get_ticker(tweet):
+	words = tweet.split()
+	return [word.upper() for word in words if word[0] == '$' and word[1:].lower() in stock_tickers]
 
 # get all files from folder
 folder = sys.argv[1]
@@ -83,7 +70,9 @@ classifier = None
 # if not, get bull, bear features, train classifer and then pickle for future uses
 if path.isfile('save_classifier.p'):
 	classifier = pickle.load(open('save_classifier.p','r'))
+	print('Classifier loaded')
 else:
+	print('Classifier not saved, making a new one')
 	# lists that store bullish, bearish, and no sentiment twits
 	bulltwits = []
 	beartwits = []
@@ -131,83 +120,23 @@ else:
 for f in files:
 	nosen_num = f.find('nosen')
 	classfied_file_name = f[:nosen_num]+'classified.csv'
+
+	# if there's a 'nosen.csv', gather unclassified data and calculate the probability of it being bull or bear
+	# if there's none, move along
 	if nosen_num > -1 and not path.isfile(classfied_file_name):
 		with open(path.join(folder,f),'r') as csvread, open(classfied_file_name,'wb') as csvwrite:
 			reader = csv.reader(csvread)
 			writer = csv.writer(csvwrite)
-			writer.writerow(['tweet','probability','sentiment'])
+			writer.writerow(['created_at','tweet','ticker','probability','sentiment'])
 
 			for row in reader:
 				line = unicode(row[1],errors='ignore')
 				to_append = filter_stock(word_tokenize(line.lower()))
 				if to_append is not None:
+					created_at = row[0]
 					probdist = classifier.prob_classify(best_bigram_word_feats(to_append))
 					samples = probdist.samples()
+					tickers = get_ticker(line)
 					for sample in samples:
-						writer.writerow([line,probdist.prob(sample),sample])
-
-			# 	for line in nosentwits:
-# 		line = unicode(line,errors='ignore')
-# 		to_append = filter_stock(word_tokenize(line.lower()))
-# 		nosen_words.append(to_append) if to_append is not None else None
-# 		nosentwits_filtered.append(line) if to_append is not None else None
-
-
-
-# with open('nosen_classified.csv','wb') as csvfile:
-# 	writer = csv.writer(csvfile)
-# 	writer.writerow(['tweet','probability','sentiment'])
-# 	for original,feat in zip(nosentwits_filtered, nosen_feats):
-# 		probdist = classifier.prob_classify(feat)
-# 		samples = probdist.samples()
-# 		for sample in samples:
-# 			writer.writerow([original,probdist.prob(sample),sample])
-
-
-
-
-# 	nosen_feats = pickle.load(open('save_nosen.p','r'))
-# 	nosentwits_filtered = pickle.load(open('save_nosen_filtered.p','r'))
-
-# 	nosen_words = []
-
-	
-
-	
-
-# 	pickle.dump(nosen_feats,open('save_nosen.p','wb'))
-# 	pickle.dump(nosentwits_filtered,open('save_nosen_filtered.p','wb'))
-
-# for feat in nosen_feats[:6]:
-# 	probdist = classifier.prob_classify(feat)
-# 	samples = probdist.samples()
-# 	for sample in samples:
-# 		#print(sample)
-# 		print(str(feat) + str(probdist.prob(sample)) + ' ' + str(sample))
-
-# accuracy_from_tests = []
-# for i in range(10):
-# 	i = 0.1*i
-# 	bull_cutoff = int(len(bull_feats)*i)
-# 	bear_cutoff = int(len(bear_feats)*i)
-# 	bull_cutoff_up = int(len(bull_feats)*(i+0.1))
-# 	bear_cutoff_up = int(len(bear_feats)*(i+0.1))
-
-
-# 	trainfeats = bull_feats[0:bull_cutoff] + bull_feats[bull_cutoff_up:len(bull_feats)] + bear_feats[0:bear_cutoff] + bear_feats[bear_cutoff_up:len(bear_feats)]
-# 	testfeats = bull_feats[bull_cutoff:bull_cutoff_up] + bear_feats[bear_cutoff:bear_cutoff_up]
-
-# 	classifier = NaiveBayesClassifier.train(trainfeats)
-# 	# classifier.show_most_informative_features(100)
-
-
-# 	for each in nosen_feats:
-# 		print(str(each)+': '+classifier.classify(each))
-
-	# test_accuracy = nltk.classify.util.accuracy(classifier, testfeats)
-	# accuracy_from_tests.append(test_accuracy)
-# 	print('Trained on '+str(len(bull_feats)*0.9)+' bull rows and '+str(len(bear_feats)*0.9)+' bear rows')
-# 	print('Tested on '+str(len(bull_feats)*0.1)+' bull rows and '+str(len(bear_feats)*0.1)+' bear rows')
-# 	print('Test number %i accuracy: %f' % (i*10+1, test_accuracy))
-
-# print('The average accuracy of 10 tests is '+str(sum(accuracy_from_tests)/len(accuracy_from_tests)))
+						for ticker in tickers:
+							writer.writerow([created_at,line,ticker,probdist.prob(sample),sample])
