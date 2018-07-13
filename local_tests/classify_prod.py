@@ -1,5 +1,8 @@
 #!/usr/bin/env python
 
+# TODO
+# labeled data still need to be added to the final file
+
 import nltk.classify.util
 from nltk.classify import NaiveBayesClassifier
 from nltk.corpus import movie_reviews
@@ -72,39 +75,41 @@ if path.isfile('save_classifier.p'):
 	classifier = pickle.load(open('save_classifier.p','r'))
 	print('Classifier loaded')
 else:
-	print('Classifier not saved, making a new one')
-	# lists that store bullish, bearish, and no sentiment twits
-	bulltwits = []
-	beartwits = []
-	nosentwits = []
+	print('No existing classifier, making a new one')
+	# lists that with twits tokenized 
+	bull_words = []
+	bear_words = []
 
 	# extract content of folder into two lists
 	# one containing all bull twits
 	# the other all bear twits
 	for f in files:
-		with open(path.join(folder,f),'r') as csvfile:
-			reader = csv.reader(csvfile)
-			if f.find('bull') > -1:
+		if f.find('bull') > -1:
+			with open(path.join(folder,f),'r') as csvfile:
+				reader = csv.reader(csvfile)
 				for row in reader:
-					bulltwits.append(row[1])
-			elif f.find('bear') > -1:
+					twit = unicode(row[1],errors='ignore')
+					to_append = filter_stock(word_tokenize(twit.lower()))
+					bull_words.append(to_append) if to_append is not None else None
+		elif f.find('bear') > -1:
+			with open(path.join(folder,f),'r') as csvfile:
+				reader = csv.reader(csvfile)
 				for row in reader:
-					beartwits.append(row[1])
-
-	bull_words = []
-	bear_words = []
-
+					twit = unicode(row[1],errors='ignore')
+					to_append = filter_stock(word_tokenize(twit.lower()))
+					bear_words.append(to_append) if to_append is not None else None
+	
 	# filter out twits that do not mention stocks
 	# tokenize twits into lists of single words
-	for line in bulltwits:
-		line = unicode(line,errors='ignore')
-		to_append = filter_stock(word_tokenize(line.lower()))
-		bull_words.append(to_append) if to_append is not None else None
-		# bull_words.append(word_tokenize(line.lower()))
-	for line in beartwits:
-		line = unicode(line,errors='ignore')
-		to_append = filter_stock(word_tokenize(line.lower()))
-		bear_words.append(to_append) if to_append is not None else None
+	# for line in bulltwits:
+	# 	line = unicode(line,errors='ignore')
+	# 	to_append = filter_stock(word_tokenize(line.lower()))
+	# 	bull_words.append(to_append) if to_append is not None else None
+	# 	# bull_words.append(word_tokenize(line.lower()))
+	# for line in beartwits:
+	# 	line = unicode(line,errors='ignore')
+	# 	to_append = filter_stock(word_tokenize(line.lower()))
+	# 	bear_words.append(to_append) if to_append is not None else None
 		# bear_words.append(word_tokenize(line.lower()))
 
 	#BigramCollocationFinder.from_words takes param of list of words
@@ -116,6 +121,10 @@ else:
 	classifier = NaiveBayesClassifier.train(trainfeats)
 	pickle.dump(classifier,open('save_classifier.p','wb'))
 	
+classfied_files = []
+# if files already classified, skip
+with open('classified_list','r') as f:
+	classified_list = f.readlines()
 
 for f in files:
 	nosen_num = f.find('nosen')
@@ -123,7 +132,7 @@ for f in files:
 
 	# if there's a 'nosen.csv', gather unclassified data and calculate the probability of it being bull or bear
 	# if there's none, move along
-	if nosen_num > -1 and not path.isfile(classfied_file_name):
+	if nosen_num > -1 and not path.isfile(classfied_file_name) and not classfied_file_name in classified_list:
 		with open(path.join(folder,f),'r') as csvread, open(classfied_file_name,'wb') as csvwrite:
 			reader = csv.reader(csvread)
 			writer = csv.writer(csvwrite)
