@@ -17,6 +17,7 @@ files = listdir('data_to_be_classified')
 files = [file for file in files if file != '.keep']
 classifier = get_classifier()
 nltk_download('stopwords')
+nltk_download('punkt')
 		
 ###################################################################
 # MAIN PROGRAM
