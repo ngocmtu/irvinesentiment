@@ -85,6 +85,7 @@ def get_classifier():
 			new_classifier_name = raw_input('Please name the new classifier \n')
 			new_classifier_name = new_classifier_name+'.p'
 			files = listdir('training_data')
+			files = [file for file in files if file != '.keep']
 			if files == []:
 				print('training_data folder empty, exiting program')
 				break

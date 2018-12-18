@@ -13,6 +13,7 @@ from make_classifier import get_classifier,get_ticker,filter_stock,best_bigram_w
 ###################################################################
 
 files = listdir('data_to_be_classified')
+files = [file for file in files if file != '.keep']
 classifier = get_classifier()
 		
 ###################################################################
