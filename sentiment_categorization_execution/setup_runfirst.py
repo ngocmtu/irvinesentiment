@@ -19,4 +19,3 @@ def install(package):
     subprocess.call([sys.executable, "-m", "pip", "install", package])
 
 install('nltk')
-install('cPickle')
