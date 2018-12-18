@@ -33,15 +33,12 @@ while True:
 		print('(all)All tickers on each row. "$AAPL and $FB bullish" will be stored one row, [$AAPL,$FB] in ticker column')
 		ticker_storage = raw_input('Your choice?(one/all) default is one\n')
 
-		if not path.exists('classfied_data'):
-			mkdir('classfied_data')
-
 		for f in files:
-			classfied_file_name = f+'classified.csv'
+			classfied_file_name = f[:-4]+'classified.csv'
 
 			# if there's a 'nosen.csv', gather unclassified data and calculate the probability of it being bull or bear
 			# if there's none, move along
-			with open(path.join('data_to_be_classified',f),'r') as csvread, open(path.join('classfied_data',classfied_file_name),'wb') as csvwrite:
+			with open(path.join('data_to_be_classified',f),'r') as csvread, open(path.join('classified_data',classfied_file_name),'wb') as csvwrite:
 				reader = csv.reader(csvread)
 				writer = csv.writer(csvwrite)
 				writer.writerow(['created_at','tweet','ticker','probability','sentiment'])
