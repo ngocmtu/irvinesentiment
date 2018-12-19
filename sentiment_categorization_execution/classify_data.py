@@ -32,8 +32,8 @@ while True:
 	elif view_classifier_or_classify == 'new':
 		print('Classifying files in the data_to_be_classified folder. Classified files will be in the classfied_data folder\n')
 		print('How do you want to store ticker information?(one/all)')
-		print('(one)One ticker on each row. "$AAPL and $FB bullish" will be stored as two rows, one with $AAPL and other with $FB in ticker column')
-		print('(all)All tickers on each row. "$AAPL and $FB bullish" will be stored one row, [$AAPL,$FB] in ticker column')
+		print('(one)One ticker on each row. $AAPL and $FB bullish will be stored as two rows, one with $AAPL and other with $FB in ticker column')
+		print('(all)All tickers on each row. $AAPL and $FB bullish will be stored one row, [$AAPL,$FB] in ticker column')
 		ticker_storage = raw_input('Your choice?(one/all) default is one\n')
 
 		for f in files:
@@ -59,6 +59,7 @@ while True:
 							# get stock tickers from twit
 							# get all tickers in one row or each ticker gets a row depending on user's choice
 							if ticker_storage == 'all':
+								tickers = ' '.join(tickers)
 								writer.writerow([created_at,line,tickers,probdist.prob(sample),sample])
 							else:
 								for ticker in tickers:
