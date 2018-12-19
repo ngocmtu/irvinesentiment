@@ -9,7 +9,7 @@ from nltk import bigrams
 from nltk import FreqDist
 import sys
 import csv
-from nltk.corpus import stopwords
+from nltk import download as nltk_download
 from os import path, listdir
 import cPickle as pickle
 
@@ -17,6 +17,8 @@ import cPickle as pickle
 # VARIABLE INITIALIZATION
 ###################################################################
 
+nltk_download('stopwords')
+nltk_download('punkt')
 stop_words=set(stopwords.words('english'))
 reload(sys)
 sys.setdefaultencoding('utf-8')
